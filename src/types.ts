@@ -85,6 +85,42 @@ export interface DraftAnswer {
   charUsed?: number;
 }
 
+// ─── Scanner Types ───────────────────────────────────────────────────
+
+export interface ScannerStatus {
+  lastScanAt: string | null;
+  nextScanAt: string | null;
+  isRunning: boolean;
+  sourcesScanned: number;
+  opportunitiesFound: number;
+  newSinceLastScan: number;
+}
+
+// ─── Filter Types ────────────────────────────────────────────────────
+
+export type SortField = 'relevance' | 'deadline' | 'date' | 'funding';
+export type SortDir = 'asc' | 'desc';
+
+export interface PipelineFilters {
+  search: string;
+  types: OpportunityType[];
+  stages: OpportunityStage[];
+  sources: DiscoverySource[];
+  minScore: number;
+  sortBy: SortField;
+  sortDir: SortDir;
+}
+
+// ─── Pipeline Metrics ────────────────────────────────────────────────
+
+export interface PipelineMetrics {
+  totalOpportunities: number;
+  totalFundingPursued: string;
+  urgentDeadlines: number;
+  awaitingReview: number;
+  activeApplications: number;
+}
+
 // ─── API Response ────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {

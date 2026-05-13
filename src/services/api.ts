@@ -1,10 +1,12 @@
 import type {
   ApiResponse,
   Opportunity,
+  OpportunityStage,
   SubmitOpportunityPayload,
   SubmitOpportunityResponse,
   WorkflowRun,
   DraftAnswer,
+  ScannerStatus,
 } from '../types';
 
 // ─── Configuration ───────────────────────────────────────────────────
@@ -110,6 +112,66 @@ const MOCK_OPPORTUNITIES: Opportunity[] = [
     tags: ['pitch competition', 'midwest', 'clean energy', 'startup'],
     matchReasons: ['Clean energy startup competition', 'Prior winners in modular/portable energy'],
     createdAt: '2026-05-13T08:30:00Z',
+  },
+  {
+    id: 'opp-007',
+    url: 'https://www.greentown.org/climatetech-catalyst',
+    name: 'Greentown Labs — Climatetech Catalyst Grant',
+    status: 'pending',
+    type: 'private_grant',
+    source: 'scanner',
+    stage: 'discovered',
+    relevanceScore: 78,
+    fundingAmount: '$25K–$75K',
+    deadline: '2026-08-15T23:59:00Z',
+    tags: ['private grant', 'climatetech', 'hardware', 'incubator'],
+    matchReasons: ['Hardware-focused climate grants', 'Past winners include distributed energy startups'],
+    createdAt: '2026-05-13T09:00:00Z',
+  },
+  {
+    id: 'opp-008',
+    url: 'https://www.impactassets.org/emerging-managers',
+    name: 'ImpactAssets Emerging Managers — Climate Equity Fund',
+    status: 'pending',
+    type: 'impact_investment',
+    source: 'scanner',
+    stage: 'discovered',
+    relevanceScore: 70,
+    fundingAmount: '$500K–$5M',
+    deadline: '2026-10-01T23:59:00Z',
+    tags: ['impact investment', 'climate equity', 'series seed', 'ESG'],
+    matchReasons: ['Climate equity focus matches Raya Empower Fund', 'Seed-stage clean energy investments'],
+    createdAt: '2026-05-13T09:15:00Z',
+  },
+  {
+    id: 'opp-009',
+    url: 'https://www.nrel.gov/innovation/incubator.html',
+    name: 'NREL Industry Growth Forum — Solar Innovation Track',
+    status: 'pending',
+    type: 'accelerator',
+    source: 'energy_gov',
+    stage: 'reviewing',
+    relevanceScore: 88,
+    fundingAmount: '$150K',
+    deadline: '2026-06-20T23:59:00Z',
+    tags: ['NREL', 'solar', 'innovation', 'government'],
+    matchReasons: ['NREL solar innovation track', 'Modular/portable solar category', 'Government-backed credibility'],
+    createdAt: '2026-05-11T10:00:00Z',
+  },
+  {
+    id: 'opp-010',
+    url: 'https://sam.gov/opp/abc123/view',
+    name: 'HUD Community Development Block Grant — Energy Resilience',
+    status: 'pending',
+    type: 'federal_grant',
+    source: 'sam_gov',
+    stage: 'discovered',
+    relevanceScore: 76,
+    fundingAmount: '$100K–$750K',
+    deadline: '2026-07-30T23:59:00Z',
+    tags: ['HUD', 'CDBG', 'resilience', 'community development'],
+    matchReasons: ['Community energy resilience funding', 'Hurricane-proof solar pods', 'Low-income housing compatibility'],
+    createdAt: '2026-05-13T09:30:00Z',
   },
 ];
 
@@ -321,3 +383,108 @@ export function getMockPhaseLogs(phaseId: string): string[] {
 
 /** Create a fresh mock workflow run */
 export { createMockWorkflowRun };
+
+// ─── Scanner API ─────────────────────────────────────────────────────
+
+const MOCK_SCANNER_STATUS: ScannerStatus = {
+  lastScanAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  nextScanAt: getNextMonday9AM(),
+  isRunning: false,
+  sourcesScanned: 6,
+  opportunitiesFound: 10,
+  newSinceLastScan: 4,
+};
+
+function getNextMonday9AM(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = (8 - day) % 7 || 7;
+  d.setDate(d.getDate() + diff);
+  d.setHours(9, 0, 0, 0);
+  return d.toISOString();
+}
+
+/** Get the current scanner status */
+export async function getScannerStatus(): Promise<ApiResponse<ScannerStatus>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/scanner/status`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(300);
+  return { success: true, data: { ...MOCK_SCANNER_STATUS } };
+}
+
+/** Trigger a manual scan */
+export async function runManualScan(): Promise<ApiResponse<Opportunity[]>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/scanner/run`, { method: 'POST' });
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  // Mock: simulate finding 2 new opportunities
+  await delay(3000);
+  const newOpps: Opportunity[] = [
+    {
+      id: `opp-scan-${Date.now()}-1`,
+      url: 'https://www.grants.gov/search-results-detail/' + Math.floor(Math.random() * 99999),
+      name: 'DOE Grid Modernization — Distributed Solar Storage',
+      status: 'pending',
+      type: 'federal_grant',
+      source: 'scanner',
+      stage: 'discovered',
+      relevanceScore: Math.floor(70 + Math.random() * 25),
+      fundingAmount: '$100K–$500K',
+      deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+      tags: ['DOE', 'grid modernization', 'storage', 'distributed'],
+      matchReasons: ['Battery storage integration matches Raya pod design', 'Grid modernization priorities'],
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: `opp-scan-${Date.now()}-2`,
+      url: 'https://www.sba.gov/funding-programs/grants/solar-' + Math.floor(Math.random() * 999),
+      name: 'SBA Emerging Leaders — Clean Energy Entrepreneurship',
+      status: 'pending',
+      type: 'accelerator',
+      source: 'scanner',
+      stage: 'discovered',
+      relevanceScore: Math.floor(65 + Math.random() * 20),
+      fundingAmount: '$10K–$50K',
+      deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+      tags: ['SBA', 'emerging leaders', 'entrepreneurship', 'clean energy'],
+      matchReasons: ['Clean energy startup focus', 'Business development resources'],
+      createdAt: new Date().toISOString(),
+    },
+  ];
+  return { success: true, data: newOpps };
+}
+
+/** Update the stage of an opportunity */
+export async function updateOpportunityStage(
+  opportunityId: string,
+  stage: OpportunityStage
+): Promise<ApiResponse<{ id: string; stage: OpportunityStage }>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/opportunities/${opportunityId}/stage`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage }),
+      });
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(400);
+  return { success: true, data: { id: opportunityId, stage } };
+}

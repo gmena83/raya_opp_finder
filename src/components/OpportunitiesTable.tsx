@@ -1,7 +1,5 @@
-import { motion } from 'framer-motion';
-import { ExternalLink, Clock, TrendingUp, Sparkles } from 'lucide-react';
-import { useOpportunities } from '../hooks/useOpportunities';
-import type { OpportunityType, OpportunityStage } from '../types';
+import { ExternalLink, Clock, TrendingUp, ArrowRight, Archive } from 'lucide-react';
+import type { Opportunity, OpportunityType, OpportunityStage } from '../types';
 
 /* ─── Config Maps ─────────────────────────────────────────────────── */
 
@@ -26,13 +24,9 @@ const stageConfig: Record<OpportunityStage, { label: string; color: string; bg: 
   archived:    { label: 'Archived',    color: '#9ca3af', bg: 'rgba(156,163,175,0.08)' },
 };
 
-/* ─── Helpers ─────────────────────────────────────────────────────── */
-
 function getDeadlineInfo(deadline?: string) {
   if (!deadline) return null;
-  const now = new Date();
-  const dl = new Date(deadline);
-  const diffMs = dl.getTime() - now.getTime();
+  const diffMs = new Date(deadline).getTime() - Date.now();
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   if (diffDays < 0) return { text: 'Expired', color: '#9ca3af', urgent: false };
   if (diffDays <= 7) return { text: `${diffDays}d left`, color: '#dc2626', urgent: true };
@@ -48,171 +42,143 @@ function getScoreColor(score: number) {
   return '#dc2626';
 }
 
+function getNextStage(stage: OpportunityStage): OpportunityStage | null {
+  const flow: Record<string, OpportunityStage> = { discovered: 'reviewing', reviewing: 'researching', researching: 'drafting' };
+  return flow[stage] || null;
+}
+
+function getNextStageLabel(stage: OpportunityStage): string {
+  const labels: Record<string, string> = { discovered: 'Investigate', reviewing: 'Research', researching: 'Draft' };
+  return labels[stage] || '';
+}
+
 /* ─── Component ───────────────────────────────────────────────────── */
 
-export const OpportunitiesTable = () => {
-  const { opportunities, isLoading } = useOpportunities();
+interface Props {
+  opportunities: Opportunity[];
+  onUpdateStage: (id: string, stage: OpportunityStage) => void;
+}
+
+export const OpportunitiesTable = ({ opportunities, onUpdateStage }: Props) => {
+  if (opportunities.length === 0) {
+    return (
+      <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-ink-quaternary)', fontFamily: 'var(--font-ui)', fontSize: '0.85rem', backgroundColor: 'var(--color-background)', borderRadius: 'var(--radius-xl)' }}>
+        No opportunities match your filters.
+      </div>
+    );
+  }
 
   return (
-    <section id="pipeline" className="section-padding" style={{ backgroundColor: 'var(--color-surface-launch)' }}>
-      <div className="container-raya">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ marginBottom: 48 }}>
-          <div className="text-eyebrow" style={{ color: 'var(--color-ink-subtle)', marginBottom: 'var(--spacing-md)' }}>Grant Pipeline</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
-            <h2 className="text-display-md" style={{ color: 'var(--color-ink)', margin: 0 }}>Raya's Active Opportunities</h2>
-            <div style={{ display: 'flex', gap: 'var(--spacing-md)', fontFamily: 'var(--font-ui)', fontSize: '0.8rem' }}>
-              <span style={{ color: 'var(--color-ink-muted)' }}>{opportunities.length} opportunities</span>
-              <span style={{ color: 'var(--color-ink-quaternary)' }}>·</span>
-              <span style={{ color: 'var(--color-ink-muted)' }}>
-                {opportunities.filter(o => o.deadline && getDeadlineInfo(o.deadline)?.urgent).length} urgent deadlines
-              </span>
-            </div>
-          </div>
-        </motion.div>
+    <div style={{ backgroundColor: 'var(--color-background)', borderRadius: 'var(--radius-xl)', overflow: 'hidden', border: '1px solid var(--color-surface-1)' }}>
+      <div style={{ overflowX: 'auto' }} className="custom-scrollbar">
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', minWidth: 960 }}>
+          <thead>
+            <tr style={{ backgroundColor: 'var(--color-surface-1)' }}>
+              <th style={thStyle}>Fit</th>
+              <th style={thStyle}>Opportunity</th>
+              <th style={thStyle}>Type</th>
+              <th style={thStyle}>Stage</th>
+              <th style={thStyle}>Funding</th>
+              <th style={thStyle}>Deadline</th>
+              <th style={thStyle}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {opportunities.map((opp) => {
+              const typeInfo = typeConfig[opp.type];
+              const stageInfo = stageConfig[opp.stage];
+              const deadlineInfo = getDeadlineInfo(opp.deadline);
+              const scoreColor = getScoreColor(opp.relevanceScore);
+              const nextStage = getNextStage(opp.stage);
 
-        {/* Table */}
-        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          style={{ backgroundColor: 'var(--color-background)', borderRadius: 'var(--radius-xl)', overflow: 'hidden', border: '1px solid var(--color-surface-1)' }}>
+              return (
+                <tr key={opp.id} style={{ borderBottom: '1px solid var(--color-surface-1)', transition: 'background-color 0.15s' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-surface-launch)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>
 
-          {isLoading ? (
-            <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-ink-quaternary)', fontFamily: 'var(--font-ui)', fontSize: '0.85rem' }}>Loading pipeline...</div>
-          ) : opportunities.length === 0 ? (
-            <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-ink-quaternary)', fontFamily: 'var(--font-ui)', fontSize: '0.85rem' }}>No opportunities in the pipeline yet. Use the analyzer above to start.</div>
-          ) : (
-            <div style={{ overflowX: 'auto' }} className="custom-scrollbar">
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', minWidth: 900 }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--color-surface-1)' }}>
-                    <th style={thStyle}>Fit</th>
-                    <th style={thStyle}>Opportunity</th>
-                    <th style={thStyle}>Type</th>
-                    <th style={thStyle}>Stage</th>
-                    <th style={thStyle}>Funding</th>
-                    <th style={thStyle}>Deadline</th>
-                    <th style={thStyle}>Links</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {opportunities.map((opp) => {
-                    const typeInfo = typeConfig[opp.type];
-                    const stageInfo = stageConfig[opp.stage];
-                    const deadlineInfo = getDeadlineInfo(opp.deadline);
-                    const scoreColor = getScoreColor(opp.relevanceScore);
+                  {/* Score */}
+                  <td style={{ ...tdStyle, width: 64 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 700, color: scoreColor }}>{opp.relevanceScore}</div>
+                      <div style={{ width: 36, height: 4, backgroundColor: 'var(--color-surface-1)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ width: `${opp.relevanceScore}%`, height: '100%', backgroundColor: scoreColor, borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  </td>
 
-                    return (
-                      <tr key={opp.id}
-                        style={{ borderBottom: '1px solid var(--color-surface-1)', transition: 'background-color 0.15s' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-surface-launch)')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                  {/* Name + Tags */}
+                  <td style={{ ...tdStyle, maxWidth: 320 }}>
+                    <div style={{ color: 'var(--color-ink)', fontWeight: 500, lineHeight: 1.4 }}>{opp.name}</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-ink-quaternary)', marginTop: 2, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opp.url}</div>
+                    {opp.tags && opp.tags.length > 0 && (
+                      <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                        {opp.tags.slice(0, 3).map(tag => (
+                          <span key={tag} style={{ padding: '1px 8px', borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--color-surface-1)', fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{tag}</span>
+                        ))}
+                        {opp.tags.length > 3 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--color-ink-quaternary)' }}>+{opp.tags.length - 3}</span>}
+                      </div>
+                    )}
+                  </td>
 
-                        {/* Relevance Score */}
-                        <td style={{ ...tdStyle, width: 64 }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 700, color: scoreColor }}>{opp.relevanceScore}</div>
-                            <div style={{ width: 36, height: 4, backgroundColor: 'var(--color-surface-1)', borderRadius: 2, overflow: 'hidden' }}>
-                              <div style={{ width: `${opp.relevanceScore}%`, height: '100%', backgroundColor: scoreColor, borderRadius: 2, transition: 'width 0.5s ease' }} />
-                            </div>
+                  {/* Type */}
+                  <td style={tdStyle}>
+                    <span style={{ padding: '3px 10px', borderRadius: 'var(--radius-pill)', backgroundColor: typeInfo.bg, color: typeInfo.color, fontWeight: 500, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>{typeInfo.label}</span>
+                  </td>
+
+                  {/* Stage */}
+                  <td style={tdStyle}>
+                    <span style={{ padding: '3px 10px', borderRadius: 'var(--radius-pill)', backgroundColor: stageInfo.bg, color: stageInfo.color, fontWeight: 500, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>{stageInfo.label}</span>
+                  </td>
+
+                  {/* Funding */}
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    {opp.fundingAmount ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-ink)' }}>
+                        <TrendingUp size={12} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+                        <span style={{ fontWeight: 500 }}>{opp.fundingAmount}</span>
+                      </div>
+                    ) : <span style={{ color: 'var(--color-ink-quaternary)' }}>&mdash;</span>}
+                  </td>
+
+                  {/* Deadline */}
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    {deadlineInfo ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Clock size={12} style={{ color: deadlineInfo.color, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ color: 'var(--color-ink-muted)', fontSize: '0.75rem' }}>{new Date(opp.deadline!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: deadlineInfo.urgent ? 700 : 400, color: deadlineInfo.color }}>
+                            {deadlineInfo.urgent && '\u26A0 '}{deadlineInfo.text}
                           </div>
-                        </td>
+                        </div>
+                      </div>
+                    ) : <span style={{ color: 'var(--color-ink-quaternary)' }}>&mdash;</span>}
+                  </td>
 
-                        {/* Opportunity Name + URL + Tags */}
-                        <td style={{ ...tdStyle, maxWidth: 320 }}>
-                          <div style={{ color: 'var(--color-ink)', fontWeight: 500, lineHeight: 1.4 }}>{opp.name}</div>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-ink-quaternary)', marginTop: 2, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opp.url}</div>
-                          {opp.tags && opp.tags.length > 0 && (
-                            <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
-                              {opp.tags.slice(0, 3).map(tag => (
-                                <span key={tag} style={{ padding: '1px 8px', borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--color-surface-1)', fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{tag}</span>
-                              ))}
-                              {opp.tags.length > 3 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--color-ink-quaternary)' }}>+{opp.tags.length - 3}</span>}
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Type Badge */}
-                        <td style={tdStyle}>
-                          <span style={{ padding: '3px 10px', borderRadius: 'var(--radius-pill)', backgroundColor: typeInfo.bg, color: typeInfo.color, fontWeight: 500, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
-                            {typeInfo.label}
-                          </span>
-                        </td>
-
-                        {/* Stage */}
-                        <td style={tdStyle}>
-                          <span style={{ padding: '3px 10px', borderRadius: 'var(--radius-pill)', backgroundColor: stageInfo.bg, color: stageInfo.color, fontWeight: 500, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
-                            {stageInfo.label}
-                          </span>
-                        </td>
-
-                        {/* Funding Amount */}
-                        <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                          {opp.fundingAmount ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-ink)' }}>
-                              <TrendingUp size={12} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
-                              <span style={{ fontWeight: 500 }}>{opp.fundingAmount}</span>
-                            </div>
-                          ) : <span style={{ color: 'var(--color-ink-quaternary)' }}>—</span>}
-                        </td>
-
-                        {/* Deadline */}
-                        <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                          {deadlineInfo ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <Clock size={12} style={{ color: deadlineInfo.color, flexShrink: 0 }} />
-                              <div>
-                                <div style={{ color: 'var(--color-ink-muted)', fontSize: '0.75rem' }}>{new Date(opp.deadline!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: deadlineInfo.urgent ? 700 : 400, color: deadlineInfo.color }}>
-                                  {deadlineInfo.urgent && '⚠ '}{deadlineInfo.text}
-                                </div>
-                              </div>
-                            </div>
-                          ) : <span style={{ color: 'var(--color-ink-quaternary)' }}>—</span>}
-                        </td>
-
-                        {/* Links */}
-                        <td style={tdStyle}>
-                          <div style={{ display: 'flex', gap: 10 }}>
-                            {opp.driveLink && <a href={opp.driveLink} target="_blank" rel="noopener noreferrer" style={linkStyle}>Drive <ExternalLink size={10} /></a>}
-                            {opp.draftLink && <a href={opp.draftLink} target="_blank" rel="noopener noreferrer" style={linkStyle}>Draft <ExternalLink size={10} /></a>}
-                            {!opp.driveLink && !opp.draftLink && <span style={{ color: 'var(--color-ink-quaternary)', fontSize: '0.75rem' }}>—</span>}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </motion.div>
-
-        {/* AI Match Reasons — expandable detail below table */}
-        {!isLoading && opportunities.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            style={{ marginTop: 'var(--spacing-lg)', padding: 'var(--spacing-lg)', backgroundColor: 'var(--color-background)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-surface-1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--spacing-md)' }}>
-              <Sparkles size={14} style={{ color: 'var(--color-primary)' }} />
-              <span className="text-eyebrow" style={{ fontSize: '0.6rem', color: 'var(--color-ink-subtle)' }}>Why These Match Raya</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--spacing-md)' }}>
-              {opportunities.filter(o => o.matchReasons && o.matchReasons.length > 0).slice(0, 3).map(opp => (
-                <div key={opp.id} style={{ padding: 'var(--spacing-md)', backgroundColor: 'var(--color-surface-launch)', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-ink)', marginBottom: 6, lineHeight: 1.3 }}>{opp.name.split('(')[0].trim()}</div>
-                  <ul style={{ margin: 0, paddingLeft: 16, listStyle: 'none' }}>
-                    {opp.matchReasons!.map((reason, i) => (
-                      <li key={i} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: 'var(--color-ink-muted)', lineHeight: 1.5, position: 'relative', paddingLeft: 4 }}>
-                        <span style={{ position: 'absolute', left: -12, color: 'var(--color-primary)' }}>·</span>
-                        {reason}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+                  {/* Actions */}
+                  <td style={tdStyle}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      {nextStage && (
+                        <button onClick={() => onUpdateStage(opp.id, nextStage)} style={actionBtnStyle}>
+                          {getNextStageLabel(opp.stage)} <ArrowRight size={10} />
+                        </button>
+                      )}
+                      {opp.driveLink && <a href={opp.driveLink} target="_blank" rel="noopener noreferrer" style={linkStyle}>Drive <ExternalLink size={10} /></a>}
+                      {opp.draftLink && <a href={opp.draftLink} target="_blank" rel="noopener noreferrer" style={linkStyle}>Draft <ExternalLink size={10} /></a>}
+                      {opp.stage !== 'archived' && opp.stage !== 'submitted' && opp.stage !== 'awarded' && (
+                        <button onClick={() => onUpdateStage(opp.id, 'archived')} style={{ ...actionBtnStyle, color: 'var(--color-ink-quaternary)' }}>
+                          <Archive size={11} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-    </section>
+    </div>
   );
 };
 
@@ -221,3 +187,4 @@ export const OpportunitiesTable = () => {
 const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px 16px', color: 'var(--color-ink-muted)', fontWeight: 500, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' };
 const tdStyle: React.CSSProperties = { padding: '14px 16px', verticalAlign: 'top' };
 const linkStyle: React.CSSProperties = { color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: '0.75rem' };
+const actionBtnStyle: React.CSSProperties = { background: 'none', border: '1px solid var(--color-surface-1)', borderRadius: 'var(--radius-md)', padding: '4px 10px', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 500, color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', transition: 'all 0.15s' };

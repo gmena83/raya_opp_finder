@@ -2,7 +2,7 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { HowItWorks } from './components/HowItWorks';
 import { LiveWorkflow } from './components/LiveWorkflow';
-import { OpportunitiesTable } from './components/OpportunitiesTable';
+import { DiscoveryDashboard } from './components/DiscoveryDashboard';
 import { TechStack } from './components/TechStack';
 import { FolderStructure } from './components/FolderStructure';
 import { Footer } from './components/Footer';
@@ -20,7 +20,7 @@ function App() {
       <Hero onOpenDemo={scrollToDashboard} />
       <HowItWorks />
       <LiveWorkflow />
-      <OpportunitiesTable />
+      <DiscoveryDashboard />
       <TechStack />
       <FolderStructure />
       <Footer />
