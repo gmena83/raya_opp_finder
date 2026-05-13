@@ -2,13 +2,52 @@
 
 export type OpportunityStatus = 'pending' | 'processing' | 'done' | 'error';
 
+export type OpportunityType =
+  | 'federal_grant'
+  | 'state_grant'
+  | 'private_grant'
+  | 'accelerator'
+  | 'pitch_competition'
+  | 'impact_investment'
+  | 'sbir_sttr';
+
+export type DiscoverySource =
+  | 'grants_gov'
+  | 'energy_gov'
+  | 'usda'
+  | 'sba'
+  | 'sam_gov'
+  | 'manual'
+  | 'scanner';
+
+export type OpportunityStage =
+  | 'discovered'
+  | 'reviewing'
+  | 'researching'
+  | 'drafting'
+  | 'submitted'
+  | 'awarded'
+  | 'rejected'
+  | 'archived';
+
 export interface Opportunity {
   id: string;
   url: string;
   name: string;
   status: OpportunityStatus;
+  type: OpportunityType;
+  source: DiscoverySource;
+  stage: OpportunityStage;
+  relevanceScore: number;
+  fundingAmount?: string;
+  deadline?: string;
+  eligibility?: string[];
+  tags?: string[];
+  matchReasons?: string[];
+  assignedTo?: string;
   driveLink?: string;
   draftLink?: string;
+  isArchived?: boolean;
   createdAt: string;
   updatedAt?: string;
 }
