@@ -1,0 +1,366 @@
+@import "tailwindcss";
+
+/* ─── Google Fonts ─────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap');
+
+/* ─── Tailwind Theme Override ──────────────────────────────────────── */
+@theme {
+  /* Brand & Accent */
+  --color-primary: #f5b419;
+  --color-primary-hover: #f4b400;
+  --color-success: #2e870d;
+
+  /* Surfaces */
+  --color-background: #ffffff;
+  --color-canvas: #000100;
+  --color-bg-secondary: #181818;
+  --color-surface-1: #f5f5f5;
+  --color-surface-compare: #fff7db;
+  --color-surface-raya: #fffaf0;
+  --color-surface-launch: #fbfbfb;
+
+  /* Ink */
+  --color-ink: #111111;
+  --color-ink-inverse: #ffffff;
+  --color-ink-muted: #4b5563;
+  --color-ink-subtle: #6b7280;
+  --color-ink-quaternary: #94a3b8;
+
+  /* Overlay */
+  --color-overlay: rgba(0, 0, 0, 0.72);
+
+  /* Font Families */
+  --font-display: 'Work Sans', sans-serif;
+  --font-body: 'Work Sans', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+  --font-ui: 'Inter', sans-serif;
+
+  /* Spacing */
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-section: 80px;
+
+  /* Border Radius */
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-pill: 50px;
+}
+
+/* ─── Root Styles ──────────────────────────────────────────────────── */
+:root {
+  font-family: var(--font-body);
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light;
+  color: var(--color-ink);
+  background-color: var(--color-background);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* ─── Selection ────────────────────────────────────────────────────── */
+::selection {
+  background-color: rgba(245, 180, 25, 0.2);
+  color: var(--color-ink);
+}
+
+/* ─── Typography Utilities ─────────────────────────────────────────── */
+.text-display-xl {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.10;
+  letter-spacing: -0.01em;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+}
+
+.text-display-lg {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.10;
+  letter-spacing: -0.01em;
+  font-size: clamp(2rem, 4vw, 3.375rem);
+}
+
+.text-display-md {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.10;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.text-headline {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.10;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+.text-card-title {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: normal;
+  font-size: 1rem;
+}
+
+.text-body-lg {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.40;
+  letter-spacing: 0;
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+}
+
+.text-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.40;
+  letter-spacing: 0;
+  font-size: 1rem;
+}
+
+.text-button {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.20;
+  letter-spacing: -0.03em;
+  font-size: 1rem;
+}
+
+.text-eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  line-height: 1.30;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+/* ─── Button Styles ────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background-color: var(--color-primary);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+  line-height: 1.20;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(245, 180, 25, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background-color: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+  line-height: 1.20;
+  border: 1.5px solid var(--color-ink-muted);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-ink);
+  background-color: var(--color-surface-1);
+}
+
+.btn-inverse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background-color: #242424;
+  color: var(--color-ink-inverse);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+  line-height: 1.20;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-inverse:hover {
+  background-color: #333333;
+  transform: translateY(-1px);
+}
+
+/* ─── Card Styles ──────────────────────────────────────────────────── */
+.card {
+  background-color: var(--color-surface-1);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.card-highlight {
+  background-color: var(--color-surface-raya);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+}
+
+/* ─── Status Pills ─────────────────────────────────────────────────── */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-pill--processing {
+  background-color: rgba(245, 180, 25, 0.12);
+  color: #b8860b;
+}
+
+.status-pill--done {
+  background-color: rgba(46, 135, 13, 0.1);
+  color: var(--color-success);
+}
+
+.status-pill--pending {
+  background-color: rgba(107, 114, 128, 0.1);
+  color: var(--color-ink-subtle);
+}
+
+.status-pill--error {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-ink-quaternary);
+  border-radius: 4px;
+}
+
+/* ─── Smooth Scroll ────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ─── Section Spacing ──────────────────────────────────────────────── */
+.section-padding {
+  padding-top: var(--spacing-section);
+  padding-bottom: var(--spacing-section);
+}
+
+/* ─── Container ────────────────────────────────────────────────────── */
+.container-raya {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-lg);
+  padding-right: var(--spacing-lg);
+}
+
+/* ─── Animations ───────────────────────────────────────────────────── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* ─── Log Terminal ─────────────────────────────────────────────────── */
+.log-terminal {
+  background-color: var(--color-canvas);
+  color: #a3e635;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+}
+
+.log-terminal .log-line {
+  border-left: 2px solid rgba(163, 230, 53, 0.2);
+  padding-left: 8px;
+  margin-bottom: 6px;
+}
+
+.log-terminal .log-timestamp {
+  color: var(--color-ink-quaternary);
+  margin-right: 8px;
+}
