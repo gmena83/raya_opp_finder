@@ -9,6 +9,8 @@ import { DiscoveryCards } from './DiscoveryCards';
 import { OpportunitiesTable } from './OpportunitiesTable';
 import { ScannerStatus } from './ScannerStatus';
 import { OpportunityDetail } from './OpportunityDetail';
+import { DeadlineCalendar } from './DeadlineCalendar';
+import { ActivityFeed } from './ActivityFeed';
 import type { Opportunity } from '../types';
 
 type ViewMode = 'cards' | 'table';
@@ -31,8 +33,14 @@ export const DiscoveryDashboard = () => {
         {/* Metrics Strip */}
         <PipelineMetrics opportunities={opportunities} />
 
-        {/* Scanner Status */}
-        <ScannerStatus status={scannerStatus} isScanning={isScanning} onRunScan={triggerScan} />
+        {/* Scanner + Activity Row */}
+        <div className="dashboard-status-row">
+          <ScannerStatus status={scannerStatus} isScanning={isScanning} onRunScan={triggerScan} />
+          <ActivityFeed />
+        </div>
+
+        {/* Deadline Calendar */}
+        <DeadlineCalendar opportunities={opportunities} onSelect={setSelectedOpportunity} />
 
         {/* Filter Bar */}
         <FilterBar

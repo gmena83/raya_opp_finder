@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
+import { NotificationCenter } from './NotificationCenter';
 
 interface NavbarProps {
   onSubmitClick: () => void;
@@ -15,6 +17,7 @@ const navLinks = [
 
 export const Navbar = ({ onSubmitClick }: NavbarProps) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isCenterOpen, setIsCenterOpen] = useState(false);
 
   return (
     <nav
@@ -60,6 +63,7 @@ export const Navbar = ({ onSubmitClick }: NavbarProps) => {
               {link.label}
             </a>
           ))}
+          <NotificationBell onOpenCenter={() => setIsCenterOpen(true)} />
           <button className="btn-primary" onClick={onSubmitClick} style={{ padding: '10px 24px', fontSize: '0.875rem' }} id="nav-submit-btn">
             Submit Opportunity
           </button>
@@ -140,6 +144,8 @@ export const Navbar = ({ onSubmitClick }: NavbarProps) => {
           .mobile-menu { display: none !important; }
         }
       `}</style>
+
+      <NotificationCenter isOpen={isCenterOpen} onClose={() => setIsCenterOpen(false)} />
     </nav>
   );
 };

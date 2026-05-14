@@ -228,3 +228,40 @@ export interface SubmitOpportunityResponse {
   status: OpportunityStatus;
   name: string;
 }
+
+// ─── Notification Types ──────────────────────────────────────────────
+
+export type NotificationType =
+  | 'new_opportunity'
+  | 'deadline_warning'
+  | 'research_complete'
+  | 'draft_ready'
+  | 'stage_update'
+  | 'missing_data_alert';
+
+export type NotificationUrgency = 'low' | 'medium' | 'high';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  opportunityId?: string;
+  opportunityName?: string;
+  isRead: boolean;
+  createdAt: string;
+  urgency: NotificationUrgency;
+}
+
+// ─── Activity Feed Types ─────────────────────────────────────────────
+
+export type ActivityType = 'scan' | 'stage_change' | 'research' | 'draft' | 'submission';
+
+export interface ActivityEvent {
+  id: string;
+  type: ActivityType;
+  title: string;
+  detail: string;
+  opportunityName?: string;
+  timestamp: string;
+}

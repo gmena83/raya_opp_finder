@@ -10,6 +10,8 @@ import type {
   ResearchDossier,
   ApplicationDraft,
   CoverLetterTemplate,
+  AppNotification,
+  ActivityEvent,
 } from '../types';
 
 // ─── Configuration ───────────────────────────────────────────────────
@@ -857,4 +859,85 @@ export async function generateCoverLetter(
   };
   const content = letters[template];
   return { success: true, data: { content, charCount: content.length } };
+}
+
+// ─── Notifications API ──────────────────────────────────────────────
+
+function hoursAgo(h: number): string {
+  return new Date(Date.now() - h * 3600000).toISOString();
+}
+
+let mockNotifications: AppNotification[] = [
+  { id: 'n-01', type: 'deadline_warning', title: 'Deadline in 3 days', message: 'DOE Solar Access (DE-FOA-0003200) application deadline is Jun 30, 2026.', opportunityId: 'opp-001', opportunityName: 'DOE Solar Access for Underserved Communities', isRead: false, createdAt: hoursAgo(1), urgency: 'high' },
+  { id: 'n-02', type: 'missing_data_alert', title: 'Unresolved data flags (48h+)', message: 'Budget Justification has 2 missing data flags unresolved for 3 days.', opportunityId: 'opp-001', opportunityName: 'DOE Solar Access for Underserved Communities', isRead: false, createdAt: hoursAgo(2), urgency: 'high' },
+  { id: 'n-03', type: 'research_complete', title: 'Research complete', message: 'All 5 research tasks finished for DOE Solar Access. Review the dossier and begin drafting.', opportunityId: 'opp-001', opportunityName: 'DOE Solar Access for Underserved Communities', isRead: false, createdAt: hoursAgo(6), urgency: 'medium' },
+  { id: 'n-04', type: 'draft_ready', title: 'Draft ready for review', message: '5 answers generated for DOE Solar Access. 2 missing data flags need resolution.', opportunityId: 'opp-001', opportunityName: 'DOE Solar Access for Underserved Communities', isRead: false, createdAt: hoursAgo(8), urgency: 'medium' },
+  { id: 'n-05', type: 'deadline_warning', title: 'Deadline in 14 days', message: 'USDA REAP application deadline is approaching — Jun 15, 2026.', opportunityId: 'opp-002', opportunityName: 'USDA Rural Energy for America Program (REAP)', isRead: false, createdAt: hoursAgo(12), urgency: 'medium' },
+  { id: 'n-06', type: 'new_opportunity', title: '2 new opportunities found', message: 'Weekly scan discovered Elemental Excelerator Cohort 2027 and California SGIP Solar Equity.', isRead: false, createdAt: hoursAgo(24), urgency: 'low' },
+  { id: 'n-07', type: 'stage_update', title: 'Stage updated to Drafting', message: 'DOE Solar Access moved from Researching to Drafting by Maria S.', opportunityId: 'opp-001', opportunityName: 'DOE Solar Access for Underserved Communities', isRead: true, createdAt: hoursAgo(30), urgency: 'low' },
+  { id: 'n-08', type: 'research_complete', title: 'Research 60% complete', message: 'USDA REAP research is in progress — 3 of 5 tasks completed.', opportunityId: 'opp-002', opportunityName: 'USDA Rural Energy for America Program (REAP)', isRead: true, createdAt: hoursAgo(36), urgency: 'medium' },
+  { id: 'n-09', type: 'missing_data_alert', title: 'Missing data flag', message: 'USDA REAP Energy Performance section has 1 unresolved flag: kWh projections.', opportunityId: 'opp-002', opportunityName: 'USDA Rural Energy for America Program (REAP)', isRead: true, createdAt: hoursAgo(40), urgency: 'high' },
+  { id: 'n-10', type: 'new_opportunity', title: '3 new opportunities found', message: 'Weekly scan discovered SBIR Phase I, SBA Growth Accelerator, and Clean Energy Innovation Challenge.', isRead: true, createdAt: hoursAgo(168), urgency: 'low' },
+  { id: 'n-11', type: 'deadline_warning', title: 'Deadline in 30 days', message: 'Elemental Excelerator Cohort 2027 deadline is Jul 15, 2026.', opportunityId: 'opp-004', opportunityName: 'Elemental Excelerator — Climate Tech Cohort 2027', isRead: true, createdAt: hoursAgo(72), urgency: 'low' },
+  { id: 'n-12', type: 'stage_update', title: 'Stage updated to Researching', message: 'USDA REAP moved from Investigating to Researching by James C.', opportunityId: 'opp-002', opportunityName: 'USDA Rural Energy for America Program (REAP)', isRead: true, createdAt: hoursAgo(96), urgency: 'low' },
+  { id: 'n-13', type: 'draft_ready', title: 'Draft in progress', message: 'USDA REAP draft generation started — 3 questions being processed.', opportunityId: 'opp-002', opportunityName: 'USDA Rural Energy for America Program (REAP)', isRead: true, createdAt: hoursAgo(48), urgency: 'medium' },
+  { id: 'n-14', type: 'new_opportunity', title: '1 new opportunity found', message: 'Manual submission: NY Green Bank Clean Energy Financing matched with 82 relevance score.', isRead: true, createdAt: hoursAgo(240), urgency: 'low' },
+  { id: 'n-15', type: 'stage_update', title: 'Opportunity archived', message: 'SBA Growth Accelerator moved to Archive — deadline passed.', isRead: true, createdAt: hoursAgo(336), urgency: 'low' },
+];
+
+const MOCK_ACTIVITY: ActivityEvent[] = [
+  { id: 'a-01', type: 'draft', title: 'Draft generated', detail: '5 answers generated, 2 missing data flags', opportunityName: 'DOE Solar Access', timestamp: hoursAgo(8) },
+  { id: 'a-02', type: 'research', title: 'Research completed', detail: 'All 5 research tasks finished successfully', opportunityName: 'DOE Solar Access', timestamp: hoursAgo(6) },
+  { id: 'a-03', type: 'stage_change', title: 'Stage → Drafting', detail: 'Moved from Researching by Maria S.', opportunityName: 'DOE Solar Access', timestamp: hoursAgo(30) },
+  { id: 'a-04', type: 'research', title: 'Research in progress', detail: '3 of 5 tasks completed (60%)', opportunityName: 'USDA REAP', timestamp: hoursAgo(36) },
+  { id: 'a-05', type: 'scan', title: 'Weekly scan completed', detail: '2 new opportunities discovered, 143 sources checked', timestamp: hoursAgo(24) },
+  { id: 'a-06', type: 'stage_change', title: 'Stage → Researching', detail: 'Moved from Investigating by James C.', opportunityName: 'USDA REAP', timestamp: hoursAgo(96) },
+  { id: 'a-07', type: 'draft', title: 'Draft started', detail: '3 questions being generated', opportunityName: 'USDA REAP', timestamp: hoursAgo(48) },
+  { id: 'a-08', type: 'scan', title: 'Weekly scan completed', detail: '3 new opportunities discovered, 143 sources checked', timestamp: hoursAgo(168) },
+  { id: 'a-09', type: 'submission', title: 'Opportunity submitted', detail: 'Application submitted to grants.gov', opportunityName: 'NY Green Bank', timestamp: hoursAgo(200) },
+  { id: 'a-10', type: 'stage_change', title: 'Opportunity archived', detail: 'Deadline passed, moved to archive', opportunityName: 'SBA Growth Accelerator', timestamp: hoursAgo(336) },
+];
+
+/** Get all notifications */
+export async function getNotifications(): Promise<ApiResponse<AppNotification[]>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/notifications`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(300);
+  return { success: true, data: [...mockNotifications] };
+}
+
+/** Mark a notification as read */
+export async function markNotificationRead(id: string): Promise<ApiResponse<void>> {
+  await delay(100);
+  mockNotifications = mockNotifications.map(n => n.id === id ? { ...n, isRead: true } : n);
+  return { success: true, data: undefined };
+}
+
+/** Mark all notifications as read */
+export async function markAllRead(): Promise<ApiResponse<void>> {
+  await delay(200);
+  mockNotifications = mockNotifications.map(n => ({ ...n, isRead: true }));
+  return { success: true, data: undefined };
+}
+
+/** Get activity feed events */
+export async function getActivityFeed(): Promise<ApiResponse<ActivityEvent[]>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/activity`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(400);
+  return { success: true, data: [...MOCK_ACTIVITY] };
 }
