@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, FileText, ShieldCheck, Brain, BarChart3, ExternalLink, File, FileSpreadsheet, FileCode } from 'lucide-react';
+import { X, Play, FileText, ShieldCheck, Brain, BarChart3, ExternalLink, File, FileSpreadsheet, FileCode, PenLine } from 'lucide-react';
 import { getResearchDossier, startResearch } from '../services/api';
 import { ResearchProgress } from './ResearchProgress';
 import { EligibilityChecklist } from './EligibilityChecklist';
 import { IntelligencePanel } from './IntelligencePanel';
+import { DraftEditor } from './DraftEditor';
 import type { Opportunity, OpportunityType, ResearchDossier, DocType } from '../types';
 
 const typeConfig: Record<OpportunityType, { label: string; color: string; bg: string }> = {
@@ -32,7 +33,7 @@ const categoryLabels: Record<string, { label: string; color: string }> = {
   draft:    { label: 'Draft', color: '#059669' },
 };
 
-type TabId = 'overview' | 'documents' | 'eligibility' | 'intelligence';
+type TabId = 'overview' | 'documents' | 'eligibility' | 'intelligence' | 'drafts';
 
 interface Props {
   opportunity: Opportunity;
@@ -83,6 +84,7 @@ export const OpportunityDetail = ({ opportunity, onClose }: Props) => {
     { id: 'documents', label: 'Documents', icon: FileText, count: dossier?.documents.length },
     { id: 'eligibility', label: 'Eligibility', icon: ShieldCheck, count: dossier?.eligibility.length },
     { id: 'intelligence', label: 'Intelligence', icon: Brain, count: (dossier?.pastWinners.length || 0) + (dossier?.intelligence.length || 0) },
+    { id: 'drafts', label: 'Drafts', icon: PenLine },
   ];
 
   return (
@@ -219,6 +221,10 @@ export const OpportunityDetail = ({ opportunity, onClose }: Props) => {
 
                 {activeTab === 'intelligence' && (
                   <IntelligencePanel pastWinners={dossier.pastWinners} intelligence={dossier.intelligence} />
+                )}
+
+                {activeTab === 'drafts' && (
+                  <DraftEditor opportunityId={opportunity.id} />
                 )}
               </>
             )}

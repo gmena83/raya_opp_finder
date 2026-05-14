@@ -8,6 +8,8 @@ import type {
   DraftAnswer,
   ScannerStatus,
   ResearchDossier,
+  ApplicationDraft,
+  CoverLetterTemplate,
 } from '../types';
 
 // ─── Configuration ───────────────────────────────────────────────────
@@ -658,4 +660,201 @@ export async function startResearch(opportunityId: string): Promise<ApiResponse<
       lastUpdated: new Date().toISOString(),
     },
   };
+}
+
+// ─── Application Draft API ──────────────────────────────────────────────
+
+function extractFlags(text: string): string[] {
+  const regex = /\[\[MISSING DATA: ([^\]]+)\]\]/g;
+  const flags: string[] = [];
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    flags.push(match[1]);
+  }
+  return flags;
+}
+
+const MOCK_DRAFTS: Record<string, ApplicationDraft> = {
+  'opp-001': {
+    opportunityId: 'opp-001',
+    status: 'review',
+    unresolvedFlags: 2,
+    lastGenerated: '2026-05-12T18:00:00Z',
+    questions: [
+      {
+        questionId: 1,
+        questionText: 'Describe your organization\'s technical innovation and how it addresses the goals of this funding opportunity.',
+        section: 'Technical Innovation',
+        answer: 'Raya Power has developed a proprietary modular solar pod system that reduces installation timelines by 60% compared to traditional rooftop solar. Our technology leverages pre-fabricated micro-inverter arrays [Tech File Pg 4] that achieve 22% greater energy yield in partial-shade conditions, directly addressing the fund\'s priority for efficiency gains >20%.\n\nEach Raya pod is a self-contained 8.5 kW solar generation unit designed for rapid deployment in underserved communities. The modular architecture enables scalable installations from single-home to community-scale deployments without costly custom engineering. Our patent-pending quick-connect system allows a two-person crew to complete installation in under 4 hours, compared to the industry average of 2-3 days.',
+        source: 'Tech_Roadmap_2026.pdf, Pg 4',
+        charLimit: 2000,
+        charUsed: 674,
+        missingDataFlags: [],
+      },
+      {
+        questionId: 2,
+        questionText: 'What is the expected community impact of this project? Include specific metrics and target populations.',
+        section: 'Community Impact',
+        answer: 'Our deployment targets underserved rural communities across 5 states, projected to bring clean energy access to 12,000+ households within 18 months [Impact Study Pg 7]. Previous deployments in similar demographics achieved a 40% reduction in energy costs for participating families.\n\nKey impact metrics:\n- 12,000 households gaining solar access\n- Average $1,200/year savings per household\n- 45,000 tons CO2 avoided over system lifetime\n- 180 local installation jobs created\n- 85% of beneficiaries below area median income',
+        source: 'Impact_Study_2025.pdf, Pg 7',
+        charLimit: 1500,
+        charUsed: 532,
+        missingDataFlags: [],
+      },
+      {
+        questionId: 3,
+        questionText: 'Provide a detailed budget justification including all cost categories.',
+        section: 'Budget Justification',
+        answer: 'Total project budget: $2.4M. Hardware (45%): $1.08M for 200 solar pod units at $5,400/unit including micro-inverters. Labor (30%): $720K covering installation crews for 18-month deployment. R&D (15%): $360K for efficiency optimization research. Admin (10%): $240K for project management and compliance reporting. [[MISSING DATA: Please verify Q4 2025 unit pricing with procurement]]\n\nCost-share commitment: Raya Power will contribute $600K (25%) in matching funds through existing hardware inventory and staff time. [[MISSING DATA: Confirm matching fund letter from CFO]]',
+        source: 'Financials_Q4.xlsx, Budget_Model tab',
+        charLimit: 3000,
+        charUsed: 582,
+        missingDataFlags: ['Please verify Q4 2025 unit pricing with procurement', 'Confirm matching fund letter from CFO'],
+      },
+      {
+        questionId: 4,
+        questionText: 'Describe the qualifications and experience of the project team.',
+        section: 'Team Qualifications',
+        answer: 'CEO Maria Santos brings 15 years of renewable energy experience including 5 years at SunPower leading community solar initiatives. CTO James Chen holds 3 patents in micro-inverter technology and previously led R&D at Enphase Energy. Operations Director Lisa Park managed the deployment of 50MW of commercial solar across the Southeast.\n\nThe team is supported by advisory board members from NREL, the Solar Energy Industries Association, and two former DOE program officers who bring deep understanding of federal grant evaluation criteria.',
+        source: 'Team_Bios_2026.pdf',
+        charLimit: 1000,
+        charUsed: 548,
+        missingDataFlags: [],
+      },
+      {
+        questionId: 5,
+        questionText: 'What is your plan for long-term sustainability beyond the grant period?',
+        section: 'Sustainability Plan',
+        answer: 'Raya Power\'s sustainability model rests on three pillars:\n\n1. Revenue Generation: Our solar-as-a-service model generates recurring revenue through power purchase agreements (PPAs) with deployment communities. Post-installation, each pod generates approximately $1,800/year in PPA revenue.\n\n2. Raya Empower Fund: We have established a revolving fund that reinvests 15% of PPA revenues into new deployments in underserved areas. This creates a self-sustaining growth cycle that continues beyond the grant period.\n\n3. Workforce Development: Our installation training program graduates 60 certified solar technicians annually, creating a pipeline of skilled workers who both support our expansion and contribute to the broader clean energy workforce.',
+        source: 'Business_Plan_2026.pdf, Sustainability Section',
+        charLimit: 2500,
+        charUsed: 730,
+        missingDataFlags: [],
+      },
+    ],
+    coverLetter: {
+      content: 'Dear DOE Solar Access Program Review Committee,\n\nRaya Power is pleased to submit this application for the Solar Access for Underserved Communities program (DE-FOA-0003200). As a minority-owned clean energy company with a proven track record of delivering modular solar solutions to underserved communities, we believe our proposal directly addresses the program\'s core objectives of expanding equitable solar access.\n\nOur proprietary solar pod technology has been specifically designed for rapid deployment in communities that traditional solar installers overlook. With 200 units deployed across 5 states serving 12,000 households, this project will demonstrate that clean energy access and community equity are not competing priorities but complementary goals.\n\nWe look forward to the opportunity to discuss how Raya Power can advance the DOE\'s vision for a more equitable clean energy future.\n\nSincerely,\nMaria Santos\nCEO, Raya Power',
+      charCount: 798,
+      template: 'standard',
+      isGenerated: true,
+    },
+  },
+  'opp-002': {
+    opportunityId: 'opp-002',
+    status: 'generating',
+    unresolvedFlags: 1,
+    lastGenerated: '2026-05-13T12:00:00Z',
+    questions: [
+      {
+        questionId: 1,
+        questionText: 'Describe how your project will benefit a rural area.',
+        section: 'Rural Benefit',
+        answer: 'Our solar pod deployment specifically targets USDA-designated rural communities in Florida and Texas with populations under 50,000. These communities currently rely on expensive grid electricity with limited renewable alternatives. By installing 80 solar pods across 4 rural communities, we will reduce energy costs by an average of 35% for participating households, directly addressing energy poverty in agricultural regions.',
+        source: 'Rural_Impact_Assessment.pdf',
+        charLimit: 2000,
+        charUsed: 430,
+        missingDataFlags: [],
+      },
+      {
+        questionId: 2,
+        questionText: 'Provide the estimated energy savings or generation from the project.',
+        section: 'Energy Performance',
+        answer: 'Each Raya solar pod generates an average of 8.5 kW, producing approximately 13,600 kWh annually in Florida\'s solar climate. Across 80 pods, the project will generate 1,088,000 kWh per year, equivalent to powering 100 average rural homes. [[MISSING DATA: Confirm kWh projections with updated solar irradiance data for target zip codes]]',
+        source: 'Energy_Modeling_2026.xlsx',
+        charLimit: 1500,
+        charUsed: 378,
+        missingDataFlags: ['Confirm kWh projections with updated solar irradiance data for target zip codes'],
+      },
+      {
+        questionId: 3,
+        questionText: 'What is the total project cost and funding breakdown?',
+        section: 'Project Costs',
+        answer: 'Total project cost: $960,000. REAP grant request: $480,000 (50%). Raya Power cost-share: $480,000 (50%) through equipment and labor. Equipment: $432,000 (80 pods at $5,400). Installation labor: $240,000. Permits and engineering: $96,000. Project management: $192,000.',
+        source: 'REAP_Budget_Template.xlsx',
+        charLimit: 2000,
+        charUsed: 342,
+        missingDataFlags: [],
+      },
+    ],
+  },
+};
+
+/** Get the application draft for an opportunity */
+export async function getApplicationDraft(opportunityId: string): Promise<ApiResponse<ApplicationDraft>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/drafts/${opportunityId}`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(600);
+  const draft = MOCK_DRAFTS[opportunityId];
+  if (draft) {
+    return { success: true, data: { ...draft, questions: draft.questions.map(q => ({ ...q })) } };
+  }
+  return {
+    success: true,
+    data: {
+      opportunityId,
+      status: 'not_started',
+      questions: [],
+      unresolvedFlags: 0,
+    },
+  };
+}
+
+/** Regenerate a single draft answer */
+export async function regenerateAnswer(
+  opportunityId: string,
+  questionId: number
+): Promise<ApiResponse<DraftAnswer>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/drafts/${opportunityId}/regenerate/${questionId}`, { method: 'POST' });
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(2000);
+  const draft = MOCK_DRAFTS[opportunityId];
+  if (draft) {
+    const q = draft.questions.find(q => q.questionId === questionId);
+    if (q) {
+      return { success: true, data: { ...q, answer: q.answer + '\n\n[Regenerated with updated context]', charUsed: (q.charUsed || 0) + 42 } };
+    }
+  }
+  return { success: false, error: 'Question not found' };
+}
+
+/** Generate a cover letter */
+export async function generateCoverLetter(
+  opportunityId: string,
+  template: CoverLetterTemplate
+): Promise<ApiResponse<{ content: string; charCount: number }>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/drafts/${opportunityId}/cover-letter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template }),
+      });
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(1500);
+  const letters: Record<CoverLetterTemplate, string> = {
+    standard: 'Dear Review Committee,\n\nRaya Power is pleased to submit this application. As a minority-owned clean energy company with a proven track record of delivering modular solar solutions to underserved communities, we believe our proposal directly addresses the program\'s core objectives.\n\nOur proprietary solar pod technology has been specifically designed for rapid deployment in communities that traditional solar installers overlook. This project will demonstrate that clean energy access and community equity are complementary goals.\n\nSincerely,\nMaria Santos\nCEO, Raya Power',
+    narrative: 'In the summer of 2023, Maria Santos stood in a rural Florida community where the nearest solar installer was 200 miles away. The families there paid some of the highest electricity rates in the state, yet had zero access to clean energy alternatives. That day, she committed to building technology that would change this equation.\n\nRaya Power was born from a simple conviction: solar energy should be as easy to deploy as plugging in a generator. Our modular pod system makes this possible. Each unit arrives pre-assembled, connects in under four hours, and begins generating clean power immediately.\n\nThis proposal outlines how we will scale this vision to serve 12,000 households across five states, creating a replicable model for equitable solar access nationwide.',
+    executive_summary: 'EXECUTIVE SUMMARY\n\nProject: Modular Solar Pod Deployment for Underserved Communities\nApplicant: Raya Power, Inc. (Minority-Owned Small Business)\nFunding Request: $1.8M over 18 months\nCost Share: $600K (25%)\n\nObjective: Deploy 200 Raya solar pods across 5 states, providing clean energy access to 12,000+ households in underserved communities.\n\nKey Outcomes:\n- 40% average reduction in household energy costs\n- 45,000 tons CO2 avoided\n- 180 local jobs created\n- Self-sustaining Raya Empower Fund for continued expansion\n\nRaya Power\'s modular approach eliminates the barriers that prevent traditional solar from reaching underserved markets: high upfront costs, lengthy installation timelines, and complex permitting.',
+  };
+  const content = letters[template];
+  return { success: true, data: { content, charCount: content.length } };
 }

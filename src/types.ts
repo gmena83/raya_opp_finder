@@ -81,8 +81,30 @@ export interface DraftAnswer {
   questionText: string;
   answer: string;
   source: string;
+  section?: string;
   charLimit?: number;
   charUsed?: number;
+  missingDataFlags?: string[];
+  isEdited?: boolean;
+}
+
+export type DraftStatus = 'not_started' | 'generating' | 'review' | 'finalized';
+export type CoverLetterTemplate = 'standard' | 'narrative' | 'executive_summary';
+
+export interface ApplicationDraft {
+  opportunityId: string;
+  status: DraftStatus;
+  questions: DraftAnswer[];
+  coverLetter?: CoverLetter;
+  unresolvedFlags: number;
+  lastGenerated?: string;
+}
+
+export interface CoverLetter {
+  content: string;
+  charCount: number;
+  template: CoverLetterTemplate;
+  isGenerated: boolean;
 }
 
 // ─── Scanner Types ───────────────────────────────────────────────────
