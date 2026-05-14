@@ -13,6 +13,7 @@ const navLinks = [
   { label: 'Analyzer', href: '#dashboard' },
   { label: 'Pipeline', href: '#pipeline' },
   { label: 'Learning', href: '#learning' },
+  { label: 'Support', href: '#support' },
   { label: 'Tech Stack', href: '#tech-stack' },
 ];
 

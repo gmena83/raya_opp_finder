@@ -3404,3 +3404,261 @@ html {
     justify-content: flex-start;
   }
 }
+
+/* ─── Support Center ──────────────────────────────────────────────── */
+
+.support-section {
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  background: var(--color-background);
+  border-top: 1px solid var(--color-surface-1);
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-xl);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.support-section-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: var(--spacing-md);
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.video-card {
+  background: var(--color-surface-launch);
+  border: 1px solid var(--color-surface-1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.video-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.2);
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+
+.video-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.video-card:hover .video-preview {
+  opacity: 1;
+}
+
+.video-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  opacity: 0.8;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.video-card:hover .video-play-overlay {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.video-info {
+  padding: 16px;
+}
+
+.video-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  background: rgba(245, 180, 25, 0.1);
+  color: var(--color-primary);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.video-info h4 {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 6px;
+}
+
+.video-info p {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+.support-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: 38px;
+}
+
+.support-card {
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-surface-1);
+}
+
+.manual-card {
+  background: var(--color-surface-launch);
+}
+
+.support-card-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--color-surface-1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink-muted);
+  margin-bottom: 16px;
+}
+
+.support-card h3 {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 8px;
+}
+
+.support-card p {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.support-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.support-action-btn:disabled {
+  background: var(--color-surface-1);
+  color: var(--color-ink-quaternary);
+  cursor: not-allowed;
+}
+
+.menatech-card {
+  background: #fff5f2; /* Light subtle orange tint */
+  border-color: #ffd8cc;
+}
+
+/* Dark mode override for menatech card if needed */
+@media (prefers-color-scheme: dark) {
+  .menatech-card {
+    background: rgba(255, 74, 0, 0.05);
+    border-color: rgba(255, 74, 0, 0.1);
+  }
+}
+
+.menatech-branding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.menatech-logo {
+  height: 36px;
+}
+
+.menatech-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.menatech-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #FF4A00;
+  letter-spacing: 0.08em;
+}
+
+.menatech-name {
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-ink);
+}
+
+.menatech-desc {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.menatech-btn {
+  background: #FF4A00;
+  color: white;
+}
+
+.menatech-btn:hover {
+  background: #e64300;
+  color: white;
+}
+
+@media (max-width: 900px) {
+  .support-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .support-sidebar {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+}

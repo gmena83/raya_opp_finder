@@ -6,6 +6,7 @@ import { DiscoveryDashboard } from './components/DiscoveryDashboard';
 import { LearningHub } from './components/LearningHub';
 import { TechStack } from './components/TechStack';
 import { FolderStructure } from './components/FolderStructure';
+import { SupportCenter } from './components/SupportCenter';
 import { Footer } from './components/Footer';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
       <LearningHub />
       <TechStack />
       <FolderStructure />
+      <SupportCenter />
       <Footer />
     </div>
   );
