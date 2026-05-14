@@ -265,3 +265,63 @@ export interface ActivityEvent {
   opportunityName?: string;
   timestamp: string;
 }
+
+// ─── Learning Loop Types ─────────────────────────────────────────────
+
+export type DocumentStatus = 'ingested' | 'processing' | 'error';
+
+export interface KnowledgeDocument {
+  id: string;
+  filename: string;
+  category: 'completed_application' | 'company_doc' | 'research' | 'template';
+  status: DocumentStatus;
+  vectorCount: number;
+  ingestedAt: string;
+  opportunityName?: string;
+  outcome?: 'awarded' | 'rejected';
+  fileSize: string;
+}
+
+export interface KnowledgeBaseStats {
+  totalDocuments: number;
+  totalVectors: number;
+  completedApplications: number;
+  winRate: number;
+  lastIngestion: string;
+}
+
+export type OutcomeResult = 'awarded' | 'rejected' | 'pending' | 'withdrawn';
+
+export interface ApplicationOutcome {
+  opportunityId: string;
+  opportunityName: string;
+  result: OutcomeResult;
+  fundingReceived?: number;
+  submittedAt: string;
+  decidedAt?: string;
+  notes: string;
+  lessonsLearned: string[];
+  strengthTags: string[];
+  weaknessTags: string[];
+}
+
+export interface StyleInsight {
+  id: string;
+  pattern: string;
+  source: string;
+  frequency: number;
+  impact: 'high' | 'medium' | 'low';
+  category: 'tone' | 'structure' | 'data_usage' | 'vocabulary';
+  examples: string[];
+}
+
+export interface FeedbackDiff {
+  id: string;
+  opportunityName: string;
+  questionSection: string;
+  originalDraft: string;
+  finalSubmitted: string;
+  changeType: 'addition' | 'removal' | 'rewrite' | 'refinement';
+  changeCount: number;
+  learnedAt: string;
+}

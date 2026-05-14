@@ -12,6 +12,12 @@ import type {
   CoverLetterTemplate,
   AppNotification,
   ActivityEvent,
+  KnowledgeDocument,
+  KnowledgeBaseStats,
+  ApplicationOutcome,
+  OutcomeResult,
+  StyleInsight,
+  FeedbackDiff,
 } from '../types';
 
 // ─── Configuration ───────────────────────────────────────────────────
@@ -940,4 +946,152 @@ export async function getActivityFeed(): Promise<ApiResponse<ActivityEvent[]>> {
   }
   await delay(400);
   return { success: true, data: [...MOCK_ACTIVITY] };
+}
+
+// ─── Learning Loop API ──────────────────────────────────────────────
+
+const MOCK_KNOWLEDGE_DOCS: KnowledgeDocument[] = [
+  { id: 'kd-01', filename: 'DOE_Solar_Access_Application_Final.pdf', category: 'completed_application', status: 'ingested', vectorCount: 847, ingestedAt: hoursAgo(48), opportunityName: 'DOE Solar Access 2025', outcome: 'awarded', fileSize: '2.4 MB' },
+  { id: 'kd-02', filename: 'USDA_REAP_2024_Submission.pdf', category: 'completed_application', status: 'ingested', vectorCount: 523, ingestedAt: hoursAgo(168), opportunityName: 'USDA REAP 2024', outcome: 'awarded', fileSize: '1.8 MB' },
+  { id: 'kd-03', filename: 'SBA_Growth_Accelerator_App.pdf', category: 'completed_application', status: 'ingested', vectorCount: 312, ingestedAt: hoursAgo(720), opportunityName: 'SBA Growth Accelerator 2024', outcome: 'rejected', fileSize: '980 KB' },
+  { id: 'kd-04', filename: 'Raya_Tech_Roadmap_2026.pdf', category: 'company_doc', status: 'ingested', vectorCount: 634, ingestedAt: hoursAgo(72), fileSize: '3.1 MB' },
+  { id: 'kd-05', filename: 'Raya_Impact_Study_2025.pdf', category: 'company_doc', status: 'ingested', vectorCount: 445, ingestedAt: hoursAgo(96), fileSize: '2.7 MB' },
+  { id: 'kd-06', filename: 'Raya_Business_Plan_2026.pdf', category: 'company_doc', status: 'ingested', vectorCount: 892, ingestedAt: hoursAgo(120), fileSize: '4.5 MB' },
+  { id: 'kd-07', filename: 'DOE_Reviewer_Feedback_2025.pdf', category: 'research', status: 'processing', vectorCount: 0, ingestedAt: hoursAgo(2), fileSize: '340 KB' },
+  { id: 'kd-08', filename: 'Federal_Grant_Cover_Letter_Templates.docx', category: 'template', status: 'ingested', vectorCount: 156, ingestedAt: hoursAgo(240), fileSize: '520 KB' },
+];
+
+const MOCK_KB_STATS: KnowledgeBaseStats = {
+  totalDocuments: 8,
+  totalVectors: 3809,
+  completedApplications: 3,
+  winRate: 67,
+  lastIngestion: hoursAgo(2),
+};
+
+let mockOutcomes: ApplicationOutcome[] = [
+  {
+    opportunityId: 'out-001',
+    opportunityName: 'DOE Solar Access for Underserved Communities 2025',
+    result: 'awarded',
+    fundingReceived: 1800000,
+    submittedAt: '2025-06-28T00:00:00Z',
+    decidedAt: '2025-09-15T00:00:00Z',
+    notes: 'Full award received. Reviewer highlighted the modular pod approach and community impact metrics as standout elements.',
+    lessonsLearned: ['Specific cost-per-watt data impressed reviewers', 'Community letters of support were critical', 'Budget justification needed more granularity'],
+    strengthTags: ['technical_innovation', 'community_impact', 'team_qualifications'],
+    weaknessTags: ['budget_detail'],
+  },
+  {
+    opportunityId: 'out-002',
+    opportunityName: 'USDA REAP Rural Energy 2024',
+    result: 'awarded',
+    fundingReceived: 480000,
+    submittedAt: '2024-12-01T00:00:00Z',
+    decidedAt: '2025-03-20T00:00:00Z',
+    notes: 'Awarded at 100% of request. USDA appreciated the rural focus and job creation projections.',
+    lessonsLearned: ['Rural impact data was well-received', 'Energy savings projections validated by third party added credibility', 'Faster turnaround than DOE'],
+    strengthTags: ['rural_impact', 'energy_performance', 'sustainability'],
+    weaknessTags: [],
+  },
+  {
+    opportunityId: 'out-003',
+    opportunityName: 'SBA Growth Accelerator 2024',
+    result: 'rejected',
+    submittedAt: '2024-08-15T00:00:00Z',
+    decidedAt: '2024-11-01T00:00:00Z',
+    notes: 'Did not advance past Round 1. Feedback indicated the application did not sufficiently address the accelerator\'s focus on business model scalability.',
+    lessonsLearned: ['SBA values business model innovation over technical innovation', 'Needed stronger revenue projection section', 'Cover letter should emphasize scalability not impact'],
+    strengthTags: ['technical_innovation'],
+    weaknessTags: ['business_model', 'revenue_projections', 'scalability'],
+  },
+];
+
+const MOCK_STYLE_INSIGHTS: StyleInsight[] = [
+  { id: 'si-01', pattern: 'Lead with quantified impact metrics in the first sentence', source: 'DOE Solar Access (won)', frequency: 85, impact: 'high', category: 'structure', examples: ['"Our deployment targets 12,000+ households..."', '"Previous installations achieved a 40% reduction..."'] },
+  { id: 'si-02', pattern: 'Use cost-per-unit breakdowns rather than lump sums in budgets', source: 'DOE Solar Access + USDA REAP (both won)', frequency: 100, impact: 'high', category: 'data_usage', examples: ['"200 solar pod units at $5,400/unit"', '"80 pods at $5,400 each"'] },
+  { id: 'si-03', pattern: 'Include third-party validation references', source: 'USDA REAP (won)', frequency: 70, impact: 'medium', category: 'data_usage', examples: ['"Validated by NREL solar irradiance data"', '"Confirmed by independent energy audit"'] },
+  { id: 'si-04', pattern: 'Avoid passive voice — use active, confident statements', source: 'Winning vs losing comparison', frequency: 78, impact: 'medium', category: 'tone', examples: ['Won: "Raya Power will deploy..."', 'Lost: "It is anticipated that deployment would..."'] },
+  { id: 'si-05', pattern: 'Keep sentences under 25 words for technical sections', source: 'DOE reviewer feedback', frequency: 65, impact: 'medium', category: 'structure', examples: ['Average sentence length in winning apps: 18 words', 'Rejected app averaged 32 words per sentence'] },
+  { id: 'si-06', pattern: 'Use "solar pod" consistently (not "unit", "module", or "system")', source: 'Brand consistency analysis', frequency: 90, impact: 'low', category: 'vocabulary', examples: ['Consistent branding reinforces technical identity', 'Reviewers noted the distinct product name'] },
+];
+
+const MOCK_FEEDBACK_DIFFS: FeedbackDiff[] = [
+  { id: 'fd-01', opportunityName: 'DOE Solar Access 2025', questionSection: 'Technical Innovation', originalDraft: 'Raya Power has developed a modular solar pod system that reduces installation timelines compared to traditional rooftop solar.', finalSubmitted: 'Raya Power has developed a proprietary modular solar pod system that reduces installation timelines by 60% compared to traditional rooftop solar, validated by 18 months of field deployment data across 3 states.', changeType: 'refinement', changeCount: 3, learnedAt: hoursAgo(48) },
+  { id: 'fd-02', opportunityName: 'DOE Solar Access 2025', questionSection: 'Budget Justification', originalDraft: 'Total project budget: $2.4M covering hardware, labor, R&D, and administration.', finalSubmitted: 'Total project budget: $2.4M. Hardware (45%): $1.08M for 200 solar pod units at $5,400/unit including micro-inverters. Labor (30%): $720K covering 12 installation crews for 18-month deployment. R&D (15%): $360K for efficiency optimization. Admin (10%): $240K for PM and compliance.', changeType: 'addition', changeCount: 5, learnedAt: hoursAgo(48) },
+  { id: 'fd-03', opportunityName: 'USDA REAP 2024', questionSection: 'Rural Benefit', originalDraft: 'Our solar deployment targets rural communities with populations under 50,000.', finalSubmitted: 'Our solar pod deployment specifically targets USDA-designated rural communities in Florida and Texas with populations under 50,000, where average electricity costs exceed $0.14/kWh and renewable energy penetration is below 5%.', changeType: 'refinement', changeCount: 2, learnedAt: hoursAgo(168) },
+  { id: 'fd-04', opportunityName: 'SBA Growth Accelerator 2024', questionSection: 'Business Model', originalDraft: 'Raya Power generates revenue through solar installations and power purchase agreements with communities.', finalSubmitted: 'Raya Power generates recurring revenue through power purchase agreements (PPAs) at $0.08/kWh, creating predictable cash flows. Our solar-as-a-service model achieves 22% gross margins with a 36-month customer payback period.', changeType: 'rewrite', changeCount: 4, learnedAt: hoursAgo(720) },
+];
+
+/** Get knowledge base documents and stats */
+export async function getKnowledgeBase(): Promise<ApiResponse<{ documents: KnowledgeDocument[]; stats: KnowledgeBaseStats }>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/knowledge-base`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(500);
+  return { success: true, data: { documents: [...MOCK_KNOWLEDGE_DOCS], stats: { ...MOCK_KB_STATS } } };
+}
+
+/** Get application outcomes */
+export async function getApplicationOutcomes(): Promise<ApiResponse<ApplicationOutcome[]>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/outcomes`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(400);
+  return { success: true, data: [...mockOutcomes] };
+}
+
+/** Tag an application outcome */
+export async function tagOutcome(
+  opportunityId: string,
+  result: OutcomeResult,
+  notes: string
+): Promise<ApiResponse<void>> {
+  await delay(300);
+  mockOutcomes = mockOutcomes.map(o =>
+    o.opportunityId === opportunityId ? { ...o, result, notes, decidedAt: new Date().toISOString() } : o
+  );
+  return { success: true, data: undefined };
+}
+
+/** Get style insights from winning proposals */
+export async function getStyleInsights(): Promise<ApiResponse<StyleInsight[]>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/style-insights`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(400);
+  return { success: true, data: [...MOCK_STYLE_INSIGHTS] };
+}
+
+/** Get feedback diffs (AI draft vs final submitted) */
+export async function getFeedbackDiffs(): Promise<ApiResponse<FeedbackDiff[]>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/feedback-diffs`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(400);
+  return { success: true, data: [...MOCK_FEEDBACK_DIFFS] };
 }
