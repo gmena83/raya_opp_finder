@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Database, FileText, Trophy, Lightbulb, GitCompare, Brain, Loader2 } from 'lucide-react';
+import { Database, Trophy, Lightbulb, GitCompare, Brain, Loader2 } from 'lucide-react';
 import { getKnowledgeBase, getApplicationOutcomes, getStyleInsights, getFeedbackDiffs } from '../services/api';
 import { KnowledgeBase } from './KnowledgeBase';
 import { OutcomeTracker } from './OutcomeTracker';

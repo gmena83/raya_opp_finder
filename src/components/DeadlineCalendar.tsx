@@ -15,9 +15,9 @@ export const DeadlineCalendar = ({ opportunities, onSelect }: Props) => {
       .filter((o) => o.deadline && new Date(o.deadline).getTime() > now && new Date(o.deadline).getTime() < ninetyDays)
       .sort((a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime())
       .map((o) => {
-        const deadline = new Date(o.deadline!);
-        const daysLeft = Math.ceil((deadline.getTime() - now) / 86400000);
-        return { ...o, deadline, daysLeft };
+        const deadlineDate = new Date(o.deadline!);
+        const daysLeft = Math.ceil((deadlineDate.getTime() - now) / 86400000);
+        return { opp: o, deadlineDate, daysLeft };
       });
   }, [opportunities]);
 
@@ -45,20 +45,20 @@ export const DeadlineCalendar = ({ opportunities, onSelect }: Props) => {
         <span className="deadline-calendar__count">{deadlines.length}</span>
       </div>
       <div className="deadline-calendar__track">
-        {deadlines.map((d) => (
+        {deadlines.map(({ opp, deadlineDate, daysLeft }) => (
           <button
-            key={d.id}
+            key={opp.id}
             className="deadline-calendar__item"
-            style={{ borderLeftColor: getUrgencyColor(d.daysLeft), backgroundColor: getUrgencyBg(d.daysLeft) }}
-            onClick={() => onSelect(d)}
+            style={{ borderLeftColor: getUrgencyColor(daysLeft), backgroundColor: getUrgencyBg(daysLeft) }}
+            onClick={() => onSelect(opp)}
           >
-            <div className="deadline-calendar__item-days" style={{ color: getUrgencyColor(d.daysLeft) }}>
+            <div className="deadline-calendar__item-days" style={{ color: getUrgencyColor(daysLeft) }}>
               <Clock size={10} />
-              {d.daysLeft}d
+              {daysLeft}d
             </div>
-            <div className="deadline-calendar__item-name">{d.name.length > 30 ? d.name.slice(0, 30) + '…' : d.name}</div>
+            <div className="deadline-calendar__item-name">{opp.name.length > 30 ? opp.name.slice(0, 30) + '…' : opp.name}</div>
             <div className="deadline-calendar__item-date">
-              {d.deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {deadlineDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </div>
           </button>
         ))}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, Search, Clock, CheckCircle2, PenLine, ArrowRightLeft, AlertTriangle, CheckCheck, X } from 'lucide-react';
+import { Bell, Search, Clock, CheckCircle2, PenLine, ArrowRightLeft, AlertTriangle, CheckCheck } from 'lucide-react';
 import { getNotifications, markNotificationRead, markAllRead } from '../services/api';
 import type { AppNotification, NotificationType } from '../types';
 

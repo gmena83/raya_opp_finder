@@ -672,15 +672,7 @@ export async function startResearch(opportunityId: string): Promise<ApiResponse<
 
 // ─── Application Draft API ──────────────────────────────────────────────
 
-function extractFlags(text: string): string[] {
-  const regex = /\[\[MISSING DATA: ([^\]]+)\]\]/g;
-  const flags: string[] = [];
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    flags.push(match[1]);
-  }
-  return flags;
-}
+
 
 const MOCK_DRAFTS: Record<string, ApplicationDraft> = {
   'opp-001': {
