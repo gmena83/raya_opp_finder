@@ -6,6 +6,7 @@ import { DiscoveryDashboard } from './components/DiscoveryDashboard';
 import { LearningHub } from './components/LearningHub';
 import { TechStack } from './components/TechStack';
 import { FolderStructure } from './components/FolderStructure';
+import { MarketIntelligence } from './components/MarketIntelligence';
 import { SupportCenter } from './components/SupportCenter';
 import { Footer } from './components/Footer';
 
@@ -23,6 +24,7 @@ function App() {
       <HowItWorks />
       <LiveWorkflow />
       <DiscoveryDashboard />
+      <MarketIntelligence />
       <LearningHub />
       <TechStack />
       <FolderStructure />

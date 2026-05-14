@@ -12,6 +12,7 @@ const navLinks = [
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Analyzer', href: '#dashboard' },
   { label: 'Pipeline', href: '#pipeline' },
+  { label: 'Market Intel', href: '#market-intel' },
   { label: 'Learning', href: '#learning' },
   { label: 'Support', href: '#support' },
   { label: 'Tech Stack', href: '#tech-stack' },
