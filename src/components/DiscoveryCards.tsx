@@ -44,9 +44,10 @@ function getScoreColor(score: number) {
 interface Props {
   opportunities: Opportunity[];
   onUpdateStage: (id: string, stage: OpportunityStage) => void;
+  onSelect: (opp: Opportunity) => void;
 }
 
-export const DiscoveryCards = ({ opportunities, onUpdateStage }: Props) => {
+export const DiscoveryCards = ({ opportunities, onUpdateStage, onSelect }: Props) => {
   if (opportunities.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: 48, color: 'var(--color-ink-quaternary)', fontFamily: 'var(--font-ui)', fontSize: '0.85rem' }}>
@@ -86,7 +87,7 @@ export const DiscoveryCards = ({ opportunities, onUpdateStage }: Props) => {
             </div>
 
             {/* Name */}
-            <h3 className="discovery-card__name">{opp.name}</h3>
+            <h3 className="discovery-card__name discovery-card__name--clickable" onClick={() => onSelect(opp)}>{opp.name}</h3>
 
             {/* Meta row: Funding + Deadline */}
             <div className="discovery-card__meta">

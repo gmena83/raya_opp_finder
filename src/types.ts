@@ -121,6 +121,72 @@ export interface PipelineMetrics {
   activeApplications: number;
 }
 
+// ─── Research Dossier Types ──────────────────────────────────────────
+
+export type ResearchStatus = 'not_started' | 'in_progress' | 'complete';
+
+export interface ResearchDossier {
+  opportunityId: string;
+  status: ResearchStatus;
+  progress: number;
+  tasks: ResearchTask[];
+  documents: ResearchDocument[];
+  eligibility: EligibilityCheck[];
+  pastWinners: PastWinner[];
+  intelligence: IntelligenceItem[];
+  lastUpdated?: string;
+}
+
+export interface ResearchTask {
+  id: string;
+  label: string;
+  tool: string;
+  status: 'pending' | 'running' | 'complete' | 'error';
+  result?: string;
+}
+
+export type DocType = 'pdf' | 'xlsx' | 'md' | 'gsheet' | 'doc';
+export type DocCategory = 'rules' | 'research' | 'form' | 'draft';
+
+export interface ResearchDocument {
+  id: string;
+  name: string;
+  type: DocType;
+  category: DocCategory;
+  driveUrl?: string;
+  size?: string;
+  addedAt: string;
+}
+
+export type EligibilityStatus = 'pass' | 'warning' | 'fail' | 'unknown';
+
+export interface EligibilityCheck {
+  criterion: string;
+  status: EligibilityStatus;
+  notes: string;
+  source?: string;
+}
+
+export interface PastWinner {
+  organization: string;
+  year: number;
+  awardAmount: string;
+  projectSummary: string;
+  relevance: string;
+}
+
+export type IntelligenceType = 'webinar' | 'news' | 'social' | 'policy';
+export type Sentiment = 'positive' | 'neutral' | 'negative';
+
+export interface IntelligenceItem {
+  type: IntelligenceType;
+  title: string;
+  summary: string;
+  source: string;
+  date: string;
+  sentiment?: Sentiment;
+}
+
 // ─── API Response ────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {

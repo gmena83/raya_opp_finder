@@ -7,6 +7,7 @@ import type {
   WorkflowRun,
   DraftAnswer,
   ScannerStatus,
+  ResearchDossier,
 } from '../types';
 
 // ─── Configuration ───────────────────────────────────────────────────
@@ -487,4 +488,174 @@ export async function updateOpportunityStage(
   }
   await delay(400);
   return { success: true, data: { id: opportunityId, stage } };
+}
+
+// ─── Research Dossier API ───────────────────────────────────────────────
+
+const MOCK_DOSSIERS: Record<string, ResearchDossier> = {
+  'opp-001': {
+    opportunityId: 'opp-001',
+    status: 'complete',
+    progress: 100,
+    lastUpdated: '2026-05-12T16:30:00Z',
+    tasks: [
+      { id: 'rt-1', label: 'Scrape NOFO rules and attachments', tool: 'Apify', status: 'complete', result: '3 documents downloaded' },
+      { id: 'rt-2', label: 'Search past winners and awardees', tool: 'Perplexity', status: 'complete', result: '4 past winners found' },
+      { id: 'rt-3', label: 'Scan for webinars and info sessions', tool: 'Serper', status: 'complete', result: '2 webinar recordings found' },
+      { id: 'rt-4', label: 'Check recent news and policy context', tool: 'Serper', status: 'complete', result: '3 relevant articles found' },
+      { id: 'rt-5', label: 'Run eligibility analysis against Raya profile', tool: 'Claude', status: 'complete', result: '4 of 5 criteria met' },
+    ],
+    documents: [
+      { id: 'doc-1', name: 'NOFO_DE-FOA-0003200.pdf', type: 'pdf', category: 'rules', size: '12.4 MB', driveUrl: 'https://drive.google.com/file/d/example1', addedAt: '2026-05-10T14:30:00Z' },
+      { id: 'doc-2', name: 'Evaluation_Criteria.pdf', type: 'pdf', category: 'rules', size: '2.1 MB', driveUrl: 'https://drive.google.com/file/d/example2', addedAt: '2026-05-10T14:35:00Z' },
+      { id: 'doc-3', name: 'Budget_Template.xlsx', type: 'xlsx', category: 'rules', size: '340 KB', driveUrl: 'https://drive.google.com/file/d/example3', addedAt: '2026-05-10T14:40:00Z' },
+      { id: 'doc-4', name: 'Past_Winners_Analysis.md', type: 'md', category: 'research', size: '28 KB', driveUrl: 'https://drive.google.com/file/d/example4', addedAt: '2026-05-11T09:00:00Z' },
+      { id: 'doc-5', name: 'Webinar_Notes.md', type: 'md', category: 'research', size: '15 KB', driveUrl: 'https://drive.google.com/file/d/example5', addedAt: '2026-05-11T11:00:00Z' },
+      { id: 'doc-6', name: 'Eligibility_Check.md', type: 'md', category: 'research', size: '8 KB', driveUrl: 'https://drive.google.com/file/d/example6', addedAt: '2026-05-12T10:00:00Z' },
+      { id: 'doc-7', name: 'Raw_Form_Data.md', type: 'md', category: 'form', size: '12 KB', driveUrl: 'https://drive.google.com/file/d/example7', addedAt: '2026-05-10T15:00:00Z' },
+    ],
+    eligibility: [
+      { criterion: 'Small business (SBA definition: <500 employees)', status: 'pass', notes: 'Raya Power has 12 employees. Well within SBA small business threshold.', source: 'NOFO Section 3.1' },
+      { criterion: 'Minority-owned or disadvantaged business', status: 'pass', notes: 'Raya Power qualifies as a minority-owned business (certified MBE).', source: 'NOFO Section 3.1.2' },
+      { criterion: 'Annual revenue under $5M for previous 3 years', status: 'warning', notes: 'Raya 2025 revenue was $4.2M, approaching the $5M cap. 2026 projections may exceed threshold if Q3-Q4 targets are met.', source: 'NOFO Section 3.2' },
+      { criterion: 'Must operate in eligible geographic region (all 50 states)', status: 'pass', notes: 'Raya operates in Florida, Texas, Puerto Rico, and California. All are eligible regions.', source: 'NOFO Section 3.3' },
+      { criterion: 'Minimum 5 years in operation', status: 'fail', notes: 'Raya Power was founded in 2023 (3 years). This criterion requires 5 years. Consider partnering with an established organization or requesting a waiver.', source: 'NOFO Section 3.4' },
+    ],
+    pastWinners: [
+      { organization: 'SunTech Community Solar', year: 2024, awardAmount: '$1.8M', projectSummary: 'Deployed community solar gardens in 12 underserved neighborhoods across Ohio and Michigan. Used micro-grid technology for apartment complexes.', relevance: 'Similar modular deployment model to Raya pods. Their micro-grid approach is comparable to our VPP architecture.' },
+      { organization: 'BrightPath Energy Equity', year: 2024, awardAmount: '$950K', projectSummary: 'Developed solar lease financing program for renters in public housing. Partnered with 3 housing authorities.', relevance: 'Renter-focused solar model closely mirrors Raya Empower Fund. Their housing authority partnerships could be replicated.' },
+      { organization: 'Resilient Power Systems', year: 2023, awardAmount: '$2.1M', projectSummary: 'Built hurricane-resilient solar + battery systems for critical infrastructure in coastal communities.', relevance: 'Hurricane resilience is a direct Raya pod selling point. Their coastal deployment strategy applies to our FL and PR markets.' },
+      { organization: 'GreenBridge Solar Cooperative', year: 2023, awardAmount: '$1.2M', projectSummary: 'Created worker-owned solar installation cooperative serving rural Appalachian communities.', relevance: 'Community ownership model aligns with Raya equity mission. Their cooperative structure could complement our pod leasing model.' },
+    ],
+    intelligence: [
+      { type: 'webinar', title: 'DOE Solar Access Program — Applicant Info Session', summary: 'Key takeaway: Evaluators will prioritize applications demonstrating >20% cost reduction for end users. They specifically mentioned modular and portable solar as an area of interest. Q&A revealed that partnerships with housing authorities carry significant weight.', source: 'DOE EERE YouTube', date: '2026-04-15', sentiment: 'positive' },
+      { type: 'news', title: 'DOE Announces $200M Expansion of Solar Access Fund', summary: 'The DOE increased the Solar Access for Underserved Communities fund by $200M following strong Congressional support. This signals growing federal commitment to equity-focused solar programs and may reduce competition intensity per applicant.', source: 'Energy.gov Press Release', date: '2026-05-01', sentiment: 'positive' },
+      { type: 'policy', title: 'IRA Tax Credit Extension for Community Solar Projects', summary: 'The Inflation Reduction Act tax credits have been extended through 2030 for community solar projects. This strengthens the financial viability argument in applications and may be cited as co-funding leverage.', source: 'Congressional Budget Office', date: '2026-04-28', sentiment: 'positive' },
+      { type: 'social', title: 'DOE Program Director highlights equity metrics in recent talk', summary: 'Dr. Sarah Chen (DOE EERE) emphasized in a LinkedIn post that 2026 applications will be scored heavily on measurable equity outcomes, not just deployment volume. She mentioned "energy cost burden reduction" as the top metric.', source: 'LinkedIn', date: '2026-05-05', sentiment: 'neutral' },
+    ],
+  },
+  'opp-002': {
+    opportunityId: 'opp-002',
+    status: 'in_progress',
+    progress: 60,
+    lastUpdated: '2026-05-13T10:00:00Z',
+    tasks: [
+      { id: 'rt-1', label: 'Scrape REAP application guidelines', tool: 'Apify', status: 'complete', result: '2 documents downloaded' },
+      { id: 'rt-2', label: 'Search past REAP awardees in solar', tool: 'Perplexity', status: 'complete', result: '3 past winners found' },
+      { id: 'rt-3', label: 'Scan for REAP webinars and trainings', tool: 'Serper', status: 'running' },
+      { id: 'rt-4', label: 'Check USDA policy updates and budget news', tool: 'Serper', status: 'pending' },
+      { id: 'rt-5', label: 'Run eligibility analysis for REAP criteria', tool: 'Claude', status: 'pending' },
+    ],
+    documents: [
+      { id: 'doc-1', name: 'REAP_Program_Guidelines_2026.pdf', type: 'pdf', category: 'rules', size: '8.7 MB', driveUrl: 'https://drive.google.com/file/d/reap1', addedAt: '2026-05-12T09:30:00Z' },
+      { id: 'doc-2', name: 'REAP_Application_Form.pdf', type: 'pdf', category: 'form', size: '1.3 MB', driveUrl: 'https://drive.google.com/file/d/reap2', addedAt: '2026-05-12T09:35:00Z' },
+      { id: 'doc-3', name: 'Past_REAP_Winners_Solar.md', type: 'md', category: 'research', size: '18 KB', driveUrl: 'https://drive.google.com/file/d/reap3', addedAt: '2026-05-13T08:00:00Z' },
+    ],
+    eligibility: [
+      { criterion: 'Located in rural area (population <50,000)', status: 'pass', notes: 'Raya deployment targets in rural FL and TX qualify under USDA rural definitions.', source: 'REAP Guidelines Sec 2.1' },
+      { criterion: 'Agricultural producer or rural small business', status: 'pass', notes: 'Raya qualifies as a rural small business serving agricultural communities.', source: 'REAP Guidelines Sec 2.2' },
+      { criterion: 'Project must demonstrate energy savings or renewable generation', status: 'pass', notes: 'Solar pod system directly generates renewable energy. Average 8.5 kW per pod.', source: 'REAP Guidelines Sec 2.3' },
+    ],
+    pastWinners: [
+      { organization: 'Plains Solar Cooperative', year: 2025, awardAmount: '$480K', projectSummary: 'Installed solar arrays on 45 rural farms in Nebraska and Kansas, reducing energy costs by 35%.', relevance: 'Rural deployment model similar to Raya. Their cost reduction metrics can serve as benchmarks for our application.' },
+      { organization: 'Gulf Coast Renewables', year: 2024, awardAmount: '$720K', projectSummary: 'Solar + battery systems for rural agricultural operations in Louisiana and Mississippi.', relevance: 'Gulf coast geography overlaps with Raya FL/TX markets. Their hurricane resilience data is directly applicable.' },
+    ],
+    intelligence: [
+      { type: 'news', title: 'USDA Increases REAP Funding by 40% for FY2026', summary: 'The USDA Rural Development office announced a significant increase in REAP funding, bringing the total to $300M for FY2026. Priority areas include solar for rural communities and resilience projects.', source: 'USDA.gov', date: '2026-04-20', sentiment: 'positive' },
+      { type: 'webinar', title: 'REAP Application Workshop — Southeast Region', summary: 'USDA regional office emphasized that applications with community co-benefits (job creation, education) score 15-20 points higher than pure energy projects.', source: 'USDA REAP Webinar Series', date: '2026-05-08', sentiment: 'positive' },
+    ],
+  },
+  'opp-004': {
+    opportunityId: 'opp-004',
+    status: 'not_started',
+    progress: 0,
+    tasks: [
+      { id: 'rt-1', label: 'Scrape Elemental Excelerator application page', tool: 'Apify', status: 'pending' },
+      { id: 'rt-2', label: 'Research past Elemental cohort companies', tool: 'Perplexity', status: 'pending' },
+      { id: 'rt-3', label: 'Find demo day recordings and interviews', tool: 'Serper', status: 'pending' },
+      { id: 'rt-4', label: 'Check Elemental\'s investment thesis and focus areas', tool: 'Serper', status: 'pending' },
+      { id: 'rt-5', label: 'Run fit analysis against Elemental criteria', tool: 'Claude', status: 'pending' },
+    ],
+    documents: [],
+    eligibility: [],
+    pastWinners: [],
+    intelligence: [],
+  },
+};
+
+/** Get research dossier for an opportunity */
+export async function getResearchDossier(opportunityId: string): Promise<ApiResponse<ResearchDossier>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/research/${opportunityId}`);
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  await delay(500);
+  const dossier = MOCK_DOSSIERS[opportunityId];
+  if (dossier) {
+    return { success: true, data: { ...dossier } };
+  }
+  // Return empty dossier for opportunities without mock data
+  return {
+    success: true,
+    data: {
+      opportunityId,
+      status: 'not_started',
+      progress: 0,
+      tasks: [
+        { id: 'rt-1', label: 'Scrape application documents', tool: 'Apify', status: 'pending' },
+        { id: 'rt-2', label: 'Research past winners', tool: 'Perplexity', status: 'pending' },
+        { id: 'rt-3', label: 'Scan for webinars and media', tool: 'Serper', status: 'pending' },
+        { id: 'rt-4', label: 'Check news and policy context', tool: 'Serper', status: 'pending' },
+        { id: 'rt-5', label: 'Run eligibility analysis', tool: 'Claude', status: 'pending' },
+      ],
+      documents: [],
+      eligibility: [],
+      pastWinners: [],
+      intelligence: [],
+    },
+  };
+}
+
+/** Start research for an opportunity (mock: simulates task completion) */
+export async function startResearch(opportunityId: string): Promise<ApiResponse<ResearchDossier>> {
+  if (isLiveMode) {
+    try {
+      const res = await fetch(`${N8N_WEBHOOK_URL}/research/${opportunityId}/start`, { method: 'POST' });
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: String(err) };
+    }
+  }
+  // Mock: return the existing dossier or a simulated in-progress one
+  await delay(800);
+  const existing = MOCK_DOSSIERS[opportunityId];
+  if (existing) {
+    return { success: true, data: { ...existing, status: 'in_progress' } };
+  }
+  return {
+    success: true,
+    data: {
+      opportunityId,
+      status: 'in_progress',
+      progress: 20,
+      tasks: [
+        { id: 'rt-1', label: 'Scrape application documents', tool: 'Apify', status: 'running' },
+        { id: 'rt-2', label: 'Research past winners', tool: 'Perplexity', status: 'pending' },
+        { id: 'rt-3', label: 'Scan for webinars and media', tool: 'Serper', status: 'pending' },
+        { id: 'rt-4', label: 'Check news and policy context', tool: 'Serper', status: 'pending' },
+        { id: 'rt-5', label: 'Run eligibility analysis', tool: 'Claude', status: 'pending' },
+      ],
+      documents: [],
+      eligibility: [],
+      pastWinners: [],
+      intelligence: [],
+      lastUpdated: new Date().toISOString(),
+    },
+  };
 }

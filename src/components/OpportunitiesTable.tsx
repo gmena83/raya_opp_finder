@@ -57,9 +57,10 @@ function getNextStageLabel(stage: OpportunityStage): string {
 interface Props {
   opportunities: Opportunity[];
   onUpdateStage: (id: string, stage: OpportunityStage) => void;
+  onSelect: (opp: Opportunity) => void;
 }
 
-export const OpportunitiesTable = ({ opportunities, onUpdateStage }: Props) => {
+export const OpportunitiesTable = ({ opportunities, onUpdateStage, onSelect }: Props) => {
   if (opportunities.length === 0) {
     return (
       <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-ink-quaternary)', fontFamily: 'var(--font-ui)', fontSize: '0.85rem', backgroundColor: 'var(--color-background)', borderRadius: 'var(--radius-xl)' }}>
@@ -108,7 +109,7 @@ export const OpportunitiesTable = ({ opportunities, onUpdateStage }: Props) => {
 
                   {/* Name + Tags */}
                   <td style={{ ...tdStyle, maxWidth: 320 }}>
-                    <div style={{ color: 'var(--color-ink)', fontWeight: 500, lineHeight: 1.4 }}>{opp.name}</div>
+                    <div onClick={() => onSelect(opp)} style={{ color: 'var(--color-ink)', fontWeight: 500, lineHeight: 1.4, cursor: 'pointer' }} className="table-opp-name">{opp.name}</div>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-ink-quaternary)', marginTop: 2, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opp.url}</div>
                     {opp.tags && opp.tags.length > 0 && (
                       <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>

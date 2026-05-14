@@ -8,6 +8,8 @@ import { FilterBar } from './FilterBar';
 import { DiscoveryCards } from './DiscoveryCards';
 import { OpportunitiesTable } from './OpportunitiesTable';
 import { ScannerStatus } from './ScannerStatus';
+import { OpportunityDetail } from './OpportunityDetail';
+import type { Opportunity } from '../types';
 
 type ViewMode = 'cards' | 'table';
 
@@ -15,6 +17,7 @@ export const DiscoveryDashboard = () => {
   const { opportunities, isLoading, isScanning, scannerStatus, updateStage, triggerScan } = useOpportunities();
   const { filters, filtered, hasActiveFilters, typeCounts, stageCounts, setSearch, toggleType, toggleStage, setMinScore, setSortBy, clearFilters } = useFilters(opportunities);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
 
   return (
     <section id="pipeline" className="section-padding" style={{ backgroundColor: 'var(--color-surface-launch)' }}>
@@ -69,9 +72,14 @@ export const DiscoveryDashboard = () => {
         {isLoading ? (
           <div style={{ padding: 64, textAlign: 'center', color: 'var(--color-ink-quaternary)', fontFamily: 'var(--font-ui)' }}>Loading pipeline...</div>
         ) : viewMode === 'cards' ? (
-          <DiscoveryCards opportunities={filtered} onUpdateStage={updateStage} />
+          <DiscoveryCards opportunities={filtered} onUpdateStage={updateStage} onSelect={setSelectedOpportunity} />
         ) : (
-          <OpportunitiesTable opportunities={filtered} onUpdateStage={updateStage} />
+          <OpportunitiesTable opportunities={filtered} onUpdateStage={updateStage} onSelect={setSelectedOpportunity} />
+        )}
+
+        {/* Detail Panel */}
+        {selectedOpportunity && (
+          <OpportunityDetail opportunity={selectedOpportunity} onClose={() => setSelectedOpportunity(null)} />
         )}
       </div>
     </section>
